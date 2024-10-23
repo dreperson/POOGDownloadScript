@@ -18,39 +18,53 @@ def download_file(url, save_path):
 
 # Function to scrape the webpage and download files
 def scrape_and_download(url, destination_folder):
-    # Get the webpage content
-    page = requests.get(url)
-    soup = BeautifulSoup(page.content, 'html.parser')
+    try:
+        # Get the webpage content
+        page = requests.get(url)
 
-    # Find all the podcast episode links
-    links = soup.find_all('a', class_='episode-link', title='Download')
+        if page.status_code != 200:
+            print(f"Failed to retrieve page: {url}, Status code: {page.status_code}")
+            return
 
-    # Reverse the list to start from the bottom episode
-    links = links[::-1]
+        soup = BeautifulSoup(page.content, 'html.parser')
 
-    # Counter to generate file prefixes
-    file_counter = 1
+        #Debugging: Print a portion of the page to verify strucutre
+        print("Page content snippet:", soup.prettify()[:1000])
 
-    # Loop through the reversed list of links and download them
-    for link in links:
-        href = link.get('href')
-        if href: 
-            file_url = href if href.startswith('http') else url + href
+        # Find all the podcast episode links
+        links = soup.find_all('a', class_='episode-link', title='Download')
 
-            # Extract the original filename from the URL
-            original_filename = os.path.basename(href)
-            file_extension = os.path.splitext(original_filename)[-1]
+        # Reverse the list to start from the bottom episode
+        links = links[::-1]
 
-            #Create new file name with counter
-            file_prefix = f"{file_counter:03}"
-            new_filename = f"{file_prefix}{original_filename}"
-            save_path = os.path.join(destination_folder, new_filename)
+        # Counter to generate file prefixes
+        file_counter = 1
 
-            # Download the file
-            download_file(file_url, save_path)
+        # Loop through the reversed list of links and download them
+        for link in links:
+            href = link.get('href')
+            if href: 
+                file_url = href if href.startswith('http') else url + href
 
-            # Increment the counter for the next file
-            file_counter += 1
+                # Extract the original filename from the URL
+                original_filename = os.path.basename(href)
+                file_extension = os.path.splitext(original_filename)[-1]
+
+                #Create new file name with counter
+                file_prefix = f"{file_counter:03}"
+                new_filename = f"{file_prefix}{original_filename}"
+                save_path = os.path.join(destination_folder, new_filename)
+
+                # Download the file
+                download_file(file_url, save_path)
+
+                # Increment the counter for the next file
+                file_counter += 1
+            else:
+                print(f"Link with no href found: {link}")
+        
+        except Exception as e:
+            print(f"Error occurred while scraping {url}: {e}")
 
 # Example usage
 if __name__ == "__main__":
