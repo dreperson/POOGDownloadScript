@@ -20,7 +20,8 @@ def download_file(url, save_path):
 def scrape_and_download(url, destination_folder):
     try:
         # Get the webpage content
-        page = requests.get(url)
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        page = requests.get(url, headers=headers)
 
         if page.status_code != 200:
             print(f"Failed to retrieve page: {url}, Status code: {page.status_code}")
@@ -33,6 +34,8 @@ def scrape_and_download(url, destination_folder):
 
         # Find all the podcast episode links
         links = soup.find_all('a', class_='episode-link', title='Download')
+        #Debugging: Make sure any links are being found
+        print(f"Found {len(links)} links")
 
         # Reverse the list to start from the bottom episode
         links = links[::-1]
@@ -63,8 +66,8 @@ def scrape_and_download(url, destination_folder):
             else:
                 print(f"Link with no href found: {link}")
         
-        except Exception as e:
-            print(f"Error occurred while scraping {url}: {e}")
+    except Exception as e:
+        print(f"Error occurred while scraping {url}: {e}")
 
 # Example usage
 if __name__ == "__main__":
